@@ -5,3 +5,5 @@ test:
 	pytest
 format:
 	python -m black . --exclude 3rdparty
+install:
+	pip install -e .

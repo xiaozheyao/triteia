@@ -1,0 +1,11 @@
+steps:
+  - label: ":white_check_mark: Install"
+    command: |
+      echo "Install dependencies"
+      pip install -e .
+    key: install
+
+  - label: ":rocket: Test"
+    command: |
+      make test
+    depends_on: install
