@@ -1,9 +1,9 @@
 benchmark:
-	python ao/benchmarks/matmul.py
-	python ao/benchmarks/bmm.py
+	python3 ao/benchmarks/matmul.py
+	python3 ao/benchmarks/bmm.py
 test:
 	pytest
 format:
-	python -m black . --exclude 3rdparty
+	python3 -m black . --exclude 3rdparty
 install:
-	pip install -e .
+	pip3 install -e .
