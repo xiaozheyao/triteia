@@ -2,8 +2,8 @@ steps:
   - label: ":white_check_mark: Install"
     command: |
       echo "Install dependencies"
-      pip3 install -e .
       pip3 install -r requirements-dev.txt
+      pip3 install -e .
     key: install
   - label: ":rocket: Test"
     command: |
