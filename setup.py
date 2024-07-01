@@ -1,7 +1,9 @@
 """Python setup.py for triteia package"""
+
 import io
 import os
 from setuptools import find_packages, setup
+from torch.utils import cpp_extension
 
 
 def read(*paths, **kwargs):
@@ -32,15 +34,25 @@ def read_requirements(path):
 setup(
     name="triteia",
     version=read("triteia", "VERSION"),
-    description="Awesome triteia created by FMStack",
-    url="https://github.com/FMStack/triteia/",
+    description="Fast GPU Kernels",
+    url="https://github.com/eth-easl/triteia/",
     long_description=read("README.md"),
     long_description_content_type="text/markdown",
-    author="FMStack",
+    author="Xiaozhe Yao",
     packages=find_packages(exclude=["tests", ".github"]),
     install_requires=read_requirements("requirements.txt"),
-    entry_points={
-        "console_scripts": ["triteia = triteia.__main__:main"]
-    },
     extras_require={"test": read_requirements("requirements-test.txt")},
+    ext_modules=[
+        cpp_extension.CUDAExtension(
+            "marlin_cuda",
+            [
+                "triteia/csrc/ops/ops.cpp",
+                "triteia/csrc/ops/marlin_nm.cu",
+            ],
+            extra_compile_args={
+                "nvcc": ["-O3", "-arch=sm_86", "--ptxas-options=-v", "-lineinfo"]
+            },
+        ),
+    ],
+    cmdclass={"build_ext": cpp_extension.BuildExtension},
 )
