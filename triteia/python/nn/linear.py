@@ -25,7 +25,7 @@ class sparse_low_precision_linear(nn.Module):
             groupsize: `int` size of the group
         """
         super().__init__()
-        assert groupsize in [-1, 128], f"Group size must be -1 or 128, got {groupsize}"
+        assert groupsize in [-1], f"Group size must be -1, got {groupsize}"
         assert (
             infeatures % 128 == 0
         ), f"Input features must be a multiple of 128, got {infeatures}"
@@ -115,7 +115,6 @@ class sparse_low_precision_linear(nn.Module):
             s = s.reshape((-1, len(scale_perm)))[:, scale_perm]
         else:
             s = s.reshape((-1, len(scale_perm_single)))[:, scale_perm_single]
-
         w = mask * w.T
         w, meta = sparse_semi_structured_from_dense_cutlass(w)
         w = w.t()
