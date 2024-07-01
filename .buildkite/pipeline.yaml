@@ -3,6 +3,7 @@ steps:
     command: |
       echo "Install dependencies"
       pip3 install -e .
+      pip3 install -r requirements-dev.txt
     key: install
   - label: ":rocket: Test"
     command: |

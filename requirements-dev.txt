@@ -8,3 +8,7 @@ pytest-cov
 mypy
 gitchangelog
 mkdocs
+pytest
+pytest-cov
+pytest-html
+pytest-console-scripts
