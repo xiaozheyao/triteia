@@ -4,4 +4,4 @@ benchmark:
 test:
 	pytest
 format:
-	python -m black .
+	python -m black . --exclude 3rdparty

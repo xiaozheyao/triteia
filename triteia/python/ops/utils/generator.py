@@ -1,7 +1,11 @@
 import torch
+import torch.nn as nn
+from .sparsity import mask_creator
 
 
-def gen_quant4_NT(m, k, groupsize=-1, device="cuda"):
+def gen_quant4_NT(m, k, groupsize=-1, device="cuda", prune_n=2, prune_m=4):
+    from triteia.python.nn.linear import sparse_low_precision_linear
+
     maxq = 2**4 - 1
     w = torch.randn((m, k), dtype=torch.half, device=device)
     k_sp = k // 2
@@ -27,24 +31,25 @@ def gen_quant4_NT(m, k, groupsize=-1, device="cuda"):
 
         ref = reshape(ref)
         w = reshape(w)
-
-    mask = mask_creator(w.T).cuda().bool()
+    mask = mask_creator(w.T, n=prune_n, m=prune_m).cuda().bool()
     uncompress = (mask * ref.T).T
 
     s = s.reshape((-1, m)).contiguous()
     linear = nn.Linear(k, m)
     linear.weight.data = ref
 
-    layer = marlin.Layer_2_4(256, 256, groupsize=groupsize)
+    layer = sparse_low_precision_linear(256, 256, groupsize=groupsize)
     if groupsize == -1:
         groupsize = k
     layer.k = k
     layer.n = m
     layer.groupsize = groupsize
-    layer.B = torch.empty((k_sp // 16, m * 16 // 8), dtype=torch.int, device=DEV)
-    layer.meta = torch.empty((m, k // 16), dtype=torch.int16, device=DEV)
-    layer.s = torch.empty((k_sp // (groupsize // 2), m), dtype=torch.half, device=DEV)
-    layer.pack(linear, s, True)
+    layer.B = torch.empty((k_sp // 16, m * 16 // 8), dtype=torch.int, device=device)
+    layer.meta = torch.empty((m, k // 16), dtype=torch.int16, device=device)
+    layer.s = torch.empty(
+        (k_sp // (groupsize // 2), m), dtype=torch.half, device=device
+    )
+    layer.pack(uncompress, s, True)
     q = layer.B
     s = layer.s
     meta = layer.meta

@@ -1,6 +1,17 @@
 import torch
 import torch.nn as nn
-from python.capi import marlin_mul_2_4
+import numpy as np
+from triteia.python.capi import marlin_mul_2_4
+from triteia.python.ops.utils.sparsity import (
+    _perm_2_4,
+    _scale_perm_2_4,
+    _scale_perm_single_2_4,
+    _perm,
+    _scale_perm,
+    _scale_perm_single,
+    mask_creator,
+    sparse_semi_structured_from_dense_cutlass,
+)
 
 
 class sparse_low_precision_linear(nn.Module):
@@ -51,7 +62,7 @@ class sparse_low_precision_linear(nn.Module):
 
     def forward(self, x):
         C = torch.empty(
-            x.shape[:-1] + (self.outfeatures,), dtype=torch.int32, device=x.device
+            x.shape[:-1] + (self.outfeatures,), dtype=x.dtype, device=x.device
         )
         self.workspace = self.workspace.to(x.device)
         marlin_mul_2_4(
@@ -93,7 +104,7 @@ class sparse_low_precision_linear(nn.Module):
             w = w.reshape((self.groupsize, -1))
             s = s.reshape((1, -1))
 
-        mask = mask_creator(w.T).cuda().bool()
+        mask = mask_creator(w.T, n=2, m=4).cuda().bool()
         w = torch.round(w / s).int()
         w += (maxq + 1) // 2
         w = torch.clamp(w, 0, maxq)
