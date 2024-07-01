@@ -38,7 +38,7 @@ setup(
     author="Xiaozhe Yao",
     packages=find_packages(exclude=["tests", ".github"]),
     install_requires=read_requirements("requirements.txt"),
-    extras_require={"test": read_requirements("requirements-test.txt")},
+    extras_require={"test": read_requirements("requirements-dev.txt")},
     ext_modules=[
         cpp_extension.CUDAExtension(
             "marlin_cuda",
