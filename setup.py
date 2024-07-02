@@ -21,12 +21,14 @@ def read(*paths, **kwargs):
         content = open_file.read().strip()
     return content
 
+
 def read_requirements(path):
     return [
         line.strip()
         for line in read(path).split("\n")
         if not line.startswith(('"', "#", "-", "git+"))
     ]
+
 
 setup(
     name="triteia",
@@ -41,14 +43,19 @@ setup(
     extras_require={"test": read_requirements("requirements-dev.txt")},
     ext_modules=[
         cpp_extension.CUDAExtension(
-            "marlin_cuda",
+            "triteia_cuda",
             [
                 "triteia/csrc/ops/ops.cpp",
                 "triteia/csrc/ops/marlin_nm.cu",
+                "triteia/csrc/ops/triteia_nm_bmm.cu",
             ],
+            dlink=True,
             extra_compile_args={
-                "nvcc": ["-O3", "-arch=sm_86", "--ptxas-options=-v", "-lineinfo"]
+                "nvcc": [
+                    "-O3", "-arch=sm_86", "--ptxas-options=-v", "-dc", "-lineinfo"
+                ]
             },
+            extra_link_args=["-lcudadevrt","-lcudart"],
         ),
     ],
     cmdclass={"build_ext": cpp_extension.BuildExtension},

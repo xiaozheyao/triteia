@@ -1,14 +1,14 @@
 import torch
 import unittest
-from triteia.python.ops import matmul_4bit_2_4, gen_quant4_NT
+from triteia.python.ops import matmul_4bit_2_4, gen_sparse_quant4_NT
 from triteia.python.configs.models.llama import llama_shapes
 
 class TestMatmulOp(unittest.TestCase):
     def run_problem(self, m: int, n: int, k: int, groupsize=-1, dev="cuda"):
         try:
-            print(f"Running problem with m={m}, n={n}, k={k}")
+            print(f"Running mm problem with m={m}, n={n}, k={k}")
             x = torch.randn((n, k), dtype=torch.float16, device=dev)
-            weight_ref, qweight, scale, meta = gen_quant4_NT(
+            weight_ref, qweight, scale, meta = gen_sparse_quant4_NT(
                 m, k, groupsize=groupsize, device=dev
             )
             fp16_output = torch.matmul(x, weight_ref)
@@ -20,11 +20,13 @@ class TestMatmulOp(unittest.TestCase):
                 0.002,
             )
         except torch.cuda.OutOfMemoryError as e:
-            print("Out of memory, skipping")
+            print(f"Out of memory, skipping m={m}, n={n}, k={k}")
 
     def test_tiny(self):
         self.run_problem(21504*2, 4096, 21504*2, groupsize=-1)
         self.run_problem(256, 16, 256, groupsize=-1)
+        self.run_problem(256, 16, 512, groupsize=-1)
+        
 
     def test_llama(self):
         bsz = 16

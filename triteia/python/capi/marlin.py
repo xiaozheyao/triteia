@@ -1,7 +1,7 @@
-import marlin_cuda
+import triteia_cuda
 
 
-def marlin_mul_2_4(
+def mul_2_4(
     A, B, meta, C, s, workspace, thread_k=-1, thread_m=-1, sms=-1, max_par=16
 ):
     """Marlin FP16x(INT4+2:4 sparsity) multiply; can be used within `torch.compile`.
@@ -19,4 +19,14 @@ def marlin_mul_2_4(
         max_par: maximum number of batch 64 problems to solve in parallel for large input sizes
     ----
     """
-    marlin_cuda.mul_2_4(A, B, meta, C, s, workspace, thread_k, thread_m, sms, max_par)
+    triteia_cuda.mul_2_4(A, B, meta, C, s, workspace, thread_k, thread_m, sms, max_par)
+
+def bmm_2_4(
+    A, B, meta, C, s, workspace, thread_k=-1, thread_m=-1, sms=-1, max_par=16
+):
+    """FP16x(INT4+2:4 sparsity) batched matrix multiplication; can be used within `torch.compile`.
+    ----
+    Parameters:
+
+    """
+    triteia_cuda.bmm_2_4(A, B, meta, C, s, workspace, thread_k, thread_m, sms, max_par)
