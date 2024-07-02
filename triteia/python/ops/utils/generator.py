@@ -56,7 +56,7 @@ def gen_batched_sparse_quant4_NT(b, m, n, groupsize=-1, device="cuda:0"):
     uncompressed = []
     for i in range(b):
         unc, q, s, meta = gen_sparse_quant4_NT(m, n, groupsize=groupsize, device=device)
-        uncompressed.append(unc.t())
+        uncompressed.append(unc)
         qs.append(q)
         scales.append(s)
         metas.append(meta)

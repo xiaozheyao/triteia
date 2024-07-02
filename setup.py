@@ -45,9 +45,8 @@ setup(
         cpp_extension.CUDAExtension(
             "triteia_cuda",
             [
-                "triteia/csrc/ops/marlin_ops.cpp",
+                "triteia/csrc/ops/ops.cpp",
                 "triteia/csrc/ops/marlin_nm.cu",
-                "triteia/csrc/ops/triteia_ops.cpp",
                 "triteia/csrc/ops/triteia_nm_bmm.cu",
             ],
             dlink=True,
