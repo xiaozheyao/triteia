@@ -1,6 +1,5 @@
 import torch
-from triteia.python.capi import marlin_mul_2_4
-
+from triteia.python.capi import mul_2_4
 
 def matmul_4bit_2_4(qweight, x, meta, s):
     """Low precision sparse matrix multiplication with 2:4 sparsity.
@@ -13,7 +12,7 @@ def matmul_4bit_2_4(qweight, x, meta, s):
     """
     C = torch.zeros((x.shape[:-1] + (s.shape[1],)), dtype=x.dtype, device=x.device)
     workspace = torch.zeros(s.shape[1], dtype=torch.int32, device=x.device)
-    marlin_mul_2_4(
+    mul_2_4(
         x,
         qweight,
         meta,

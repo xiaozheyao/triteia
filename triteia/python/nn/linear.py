@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import numpy as np
-from triteia.python.capi import marlin_mul_2_4
+from triteia.python.capi import mul_2_4
 from triteia.python.ops.utils.sparsity import (
     _perm_2_4,
     _scale_perm_2_4,
@@ -65,7 +65,7 @@ class sparse_low_precision_linear(nn.Module):
             x.shape[:-1] + (self.outfeatures,), dtype=x.dtype, device=x.device
         )
         self.workspace = self.workspace.to(x.device)
-        marlin_mul_2_4(
+        mul_2_4(
             x.view((-1, x.shape[-1])),
             self.qweight,
             self.meta,

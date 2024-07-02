@@ -1,3 +1,3 @@
-from .marlin import marlin_mul_2_4
+from .marlin import mul_2_4, bmm_2_4
 
-__all__ = ["marlin_mul_2_4"]
+__all__ = ["mul_2_4", "bmm_2_4"]
