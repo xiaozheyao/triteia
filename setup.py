@@ -49,7 +49,7 @@ setup(
     long_description=read("README.md"),
     long_description_content_type="text/markdown",
     author="Xiaozhe Yao",
-    packages=find_packages(exclude=["tests", ".github"]),
+    packages=find_packages(exclude=["tests", ".github", "benchmarks", "docs"]),
     install_requires=read_requirements("requirements.txt"),
     extras_require={"test": read_requirements("requirements-dev.txt")},
     ext_modules=[
