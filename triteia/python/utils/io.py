@@ -6,7 +6,7 @@ def save_tensors(tensors, path):
         tensors[key] = tensors[key].contiguous()
     save_file(tensors, path)
 
-def read_tensors(path, prefix=None, device='cpu'):
+def read_tensors(path, prefix=None, device="cpu"):
     tensors = {}
     with st.safe_open(path, framework="pt", device=device) as f:
         for key in f.keys():
@@ -17,3 +17,4 @@ def read_tensors(path, prefix=None, device='cpu'):
                     module_name = key.removeprefix(prefix + ".")
                     tensors[module_name] = f.get_tensor(key)
     return tensors
+
