@@ -33,6 +33,8 @@ def sdpa(
     assert q.shape == k.shape == v.shape
     if attn_mask is not None:
         impl = "torch"
+    if impl not in available_impl:
+        impl = "torch"
     # qkv are of shape (batch, seq_len, num_heads, head_dim)
     if impl == "torch":
         output = F.scaled_dot_product_attention(
