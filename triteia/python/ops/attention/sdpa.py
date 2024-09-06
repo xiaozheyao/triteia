@@ -2,10 +2,23 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 from typing import Optional
+from triteia.python.utils.gpu import is_hopper, is_ampere
+from triteia.python.utils import warn_once
 
-# from flash_attn_interface import flash_attn_func
-from flash_attn import flash_attn_func
+available_impl = ["torch"]
 
+try:
+    if is_hopper():
+        from flash_attn_interface import flash_attn_func
+        available_impl.append("fa")
+    elif is_ampere():
+        from flash_attn_interface import flash_attn_func
+        available_impl.append("fa")
+    else:
+        warn_once("flash_attn is not supported on this GPU, using torch instead")
+except ImportError:
+    warn_once("flash_attn is not installed, using torch instead")
+    
 def sdpa(
         q: torch.Tensor, 
         k: torch.Tensor, 
