@@ -12,7 +12,7 @@ try:
         from flash_attn_interface import flash_attn_func
         available_impl.append("fa")
     elif is_ampere():
-        from flash_attn_interface import flash_attn_func
+        from flash_attn import flash_attn_func
         available_impl.append("fa")
     else:
         warn_once("flash_attn is not supported on this GPU, using torch instead")
@@ -47,7 +47,7 @@ def sdpa(
             scale=scale,
         )
         output = torch.permute(output, [0,2,1,3])
-        return output
-
     elif impl == "fa":
-        return flash_attn_func(q,k,v, softmax_scale=scale, causal=is_causal)
+        output = flash_attn_func(q,k,v, softmax_scale=scale, causal=is_causal)
+        
+    return output
