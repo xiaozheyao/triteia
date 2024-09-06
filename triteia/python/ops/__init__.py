@@ -8,7 +8,7 @@ from .matmul.sbmm import (
 )
 from .utils.sparsity import mask_creator
 from .utils.generator import gen_sparse_quant4_NT, gen_batched_sparse_quant4_NT
-
+from .attention.sdpa import sdpa
 
 __all__ = [
     "matmul_4bit_2_4",
@@ -21,4 +21,5 @@ __all__ = [
     "sbmm_4bit_2_4_forloop",
     "sbmm_4bit_2_4_multilaunch",
     "sbmm_4bit_2_4_native",
+    "sdpa",
 ]

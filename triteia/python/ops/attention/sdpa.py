@@ -2,7 +2,9 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 from typing import Optional
-from flash_attn_interface import flash_attn_func
+
+# from flash_attn_interface import flash_attn_func
+from flash_attn import flash_attn_func
 
 def sdpa(
         q: torch.Tensor, 
@@ -20,7 +22,7 @@ def sdpa(
         impl = "torch"
     # qkv are of shape (batch, seq_len, num_heads, head_dim)
     if impl == "torch":
-        return F.scaled_dot_product_attention(
+        output = F.scaled_dot_product_attention(
             torch.permute(q, [0,2,1,3]),
             torch.permute(k, [0,2,1,3]),
             torch.permute(v, [0,2,1,3]),
@@ -29,5 +31,8 @@ def sdpa(
             is_causal=is_causal,
             scale=scale,
         )
+        output = torch.permute(output, [0,2,1,3])
+        return output
+
     elif impl == "fa":
         return flash_attn_func(q,k,v, softmax_scale=scale, causal=is_causal)
