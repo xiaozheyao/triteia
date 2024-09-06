@@ -7,6 +7,9 @@ from torch.utils import cpp_extension
 
 
 def get_compute_capability():
+    forced_cap = os.environ.get("TRITEIA_COMPUTE_CAP", None)
+    if forced_cap is not None:
+        return forced_cap
     try:
         compute_cap = (
             os.popen("nvidia-smi --query-gpu=compute_cap --format=csv,noheader")
