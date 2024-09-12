@@ -43,7 +43,9 @@ def benchmark(distribution, nr, nm, m, k, dev="cuda", groupsize=-1):
         fp16_func,
         flops_func,
         kwargs={
+            "dist": distribution,
             "nr": nr,
+            "nm": nm,
             "m": m,
             "k": k,
             "x": x,
@@ -56,7 +58,9 @@ def benchmark(distribution, nr, nm, m, k, dev="cuda", groupsize=-1):
         w4_2_4_forloop_func,
         flops_func,
         kwargs={
+            "dist": distribution,
             "nr": nr,
+            "nm": nm,
             "m": m,
             "k": k,
             "qweight": qweight,
@@ -71,7 +75,9 @@ def benchmark(distribution, nr, nm, m, k, dev="cuda", groupsize=-1):
         w4_2_4_native_func,
         flops_func,
         kwargs={
+            "dist": distribution,
             "nr": nr,
+            "nm": nm,
             "m": m,
             "k": k,
             "qweight": qweight,
@@ -86,6 +92,7 @@ def benchmark(distribution, nr, nm, m, k, dev="cuda", groupsize=-1):
         w4_2_4_multilaunch_func,
         flops_func,
         kwargs={
+            "dist": distribution,
             "nr": nr,
             "m": m,
             "k": k,
@@ -109,16 +116,13 @@ def benchmark(distribution, nr, nm, m, k, dev="cuda", groupsize=-1):
 
 if __name__ == "__main__":
     results = []
-    nr = [16, 32, 64, 128]
+    nr = [100]
     nm = [
-        [2, 4, 8, 16],
-        [2, 4, 8, 16, 32],
-        [2, 4, 8, 16, 32, 64],
-        [2, 4, 8, 16, 32, 64, 128],
+        [2, 4, 8, 16, 32, 64, 100],
     ]
-    distributions = ["uniform", "zipf:1.5"]
-    ms = [4096, 8192]
-    ns = [4096, 8192]
+    distributions = ["zipf:2.0"]
+    ms = [2048]
+    ns = [2048]
     for distribution in distributions:
         for i in range(len(nr)):
             for j in range(len(nm[i])):
