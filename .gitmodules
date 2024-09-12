@@ -3,10 +3,10 @@
 	url = https://github.com/NVIDIA/nvbench.git
 [submodule "3rdparty/spdlog"]
 	path = 3rdparty/spdlog
-	url = git@github.com:gabime/spdlog.git
+	url = https://github.com/gabime/spdlog.git
 [submodule "3rdparty/cutlass"]
 	path = 3rdparty/cutlass
 	url = https://github.com/NVIDIA/cutlass.git
 [submodule "3rdparty/flash-attention"]
 	path = 3rdparty/flash-attention
-	url = git@github.com:Dao-AILab/flash-attention.git
+	url = https://github.com/Dao-AILab/flash-attention.git
