@@ -49,6 +49,7 @@ def read_requirements(path):
 
 
 compute_cap = get_compute_capability()
+print(f"Detected compute capability: {compute_cap}")
 if compute_cap is None:
     raise ValueError("Failed to detect compute capability")
 

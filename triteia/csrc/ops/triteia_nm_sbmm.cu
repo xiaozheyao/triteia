@@ -796,8 +796,8 @@ __global__ void SBMM_2_4(
       else {
         printf("Unsupported configuration!\n");
       }
-      // cudaError_t err = cudaGetLastError();
-      // if (err != cudaSuccess) printf("Error: %s\n", cudaGetErrorString(err));
+      cudaError_t err = cudaGetLastError();
+      if (err != cudaSuccess) printf("Error: %s\n", cudaGetErrorString(err));
       __syncthreads();
       A_ptr += 16 * thread_n_blocks * (prob_k / 8) * par;
       C_ptr += 16 * thread_n_blocks * (prob_n / 8) * par;
