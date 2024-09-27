@@ -72,6 +72,7 @@ setup(
                 "triteia/csrc/ops/marlin_nm.cu",
                 "triteia/csrc/ops/triteia_nm_bmm.cu",
                 "triteia/csrc/ops/triteia_nm_sbmm.cu",
+                "triteia/csrc/ops/pos_encoding_kernels.cu",
             ],
             dlink=True,
             extra_compile_args={

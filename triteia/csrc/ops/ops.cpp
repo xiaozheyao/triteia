@@ -2,6 +2,9 @@
 #include <cuda_runtime.h>
 #include <torch/all.h>
 #include <torch/python.h>
+#include <torch/library.h>
+
+#define TORCH_LIBRARY_EXPAND(NAME, MODULE) TORCH_LIBRARY(NAME, MODULE)
 
 namespace marlin {
 int marlin_cuda_2_4(const void *A, const void *B, const void *meta, void *C,
@@ -99,18 +102,18 @@ void bmm_2_4(const torch::Tensor &A, const torch::Tensor &B,
 }
 
 void sbmm_forloop(const torch::Tensor &A, const torch::Tensor &B,
-                const torch::Tensor &meta, torch::Tensor &C,
-                const torch::Tensor &s, const torch::Tensor &indices,
-                torch::Tensor &workspace, const torch::Tensor &starts,
-                const torch::Tensor &counts, int thread_k = -1,
-                int thread_n = -1, int sms = -1, int max_par = 8) {
+                  const torch::Tensor &meta, torch::Tensor &C,
+                  const torch::Tensor &s, const torch::Tensor &indices,
+                  torch::Tensor &workspace, const torch::Tensor &starts,
+                  const torch::Tensor &counts, int thread_k = -1,
+                  int thread_n = -1, int sms = -1, int max_par = 8) {
   for (int i = 0; i < indices.size(0); i++) {
     int start = starts[i].item<int>();
     auto sliced_C = C.slice(0, start, start + counts[i].item<int>());
     auto my_workspace = workspace[i];
-    marlin::mul_2_4(A.slice(0, start, start + counts[i].item<int>()), B[indices[i]],
-            meta[indices[i]], sliced_C, s[indices[i]], my_workspace, thread_k,
-            thread_n, sms, max_par);
+    marlin::mul_2_4(A.slice(0, start, start + counts[i].item<int>()),
+                    B[indices[i]], meta[indices[i]], sliced_C, s[indices[i]],
+                    my_workspace, thread_k, thread_n, sms, max_par);
   }
 }
 
@@ -149,6 +152,18 @@ void sbmm_2_4(const torch::Tensor &A, const torch::Tensor &B,
 }
 }  // namespace triteia
 
+namespace vllm {
+void rotary_embedding(torch::Tensor &positions, torch::Tensor &query,
+                      torch::Tensor &key, int64_t head_size,
+                      torch::Tensor &cos_sin_cache, bool is_neox);
+
+void batched_rotary_embedding(torch::Tensor &positions, torch::Tensor &query,
+                              torch::Tensor &key, int64_t head_size,
+                              torch::Tensor &cos_sin_cache, bool is_neox,
+                              int64_t rot_dim,
+                              torch::Tensor &cos_sin_cache_offsets);
+}  // namespace vllm
+
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   m.def("mul_2_4", &marlin::mul_2_4,
         "Marlin FP16xINT4 matmul with 2:4 sparsity.");
@@ -156,4 +171,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   m.def("sbmm_forloop", &triteia::sbmm_forloop,
         "FP16xINT4 sbmm with 2:4 sparsity.");
   m.def("sbmm_2_4", &triteia::sbmm_2_4, "FP16xINT4 sbmm with 2:4 sparsity.");
+  m.def("rotary_embedding", &vllm::rotary_embedding,
+        "Apply GPT-NeoX or GPT-J style rotary embedding to query and key.");
+  m.def("batched_rotary_embedding", &vllm::batched_rotary_embedding, "Apply GPT-NeoX or GPT-J style rotary embedding to query and key (supports multiple loras).");
 }
