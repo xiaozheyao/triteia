@@ -7,3 +7,5 @@ format:
 	python3 -m black . --exclude 3rdparty
 install:
 	pip3 install -e .
+build-whl:
+	python -m build --no-isolation
