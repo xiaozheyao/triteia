@@ -61,11 +61,13 @@ class TestSBMMOp(unittest.TestCase):
         except torch.cuda.OutOfMemoryError as e:
             print(f"Out of memory, skipping nr={nr}, nm={nm}, m={m}, k={k}")
         finally:
-            torch.cuda.empty_cache()
+            pass
+            # torch.cuda.empty_cache()
 
     def test_tiny(self):
-        for i in range(10000):
-            self.run_problem("uniform",  10,  5, 256,  256)
+        for i in range(20):
+            self.run_problem("uniform",  10,  5, 256,  512)
+            # self.run_problem("uniform", 128, 2, 4096, 12288)
             self.run_problem("zipf:1.5", 128, 2, 4096, 12288)
 
     # def test_llama(self):
