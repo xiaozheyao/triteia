@@ -741,15 +741,15 @@ __global__ void SBMM_2_4(
     int start = starts_ptr[batch_id];
     int count = counts_ptr[batch_id];
     int weight_indices = indices_ptr[batch_id];
-    const int4 *__restrict__ A_ptr = A + start * prob_k / 8;
+    const int4 *__restrict__ A_ptr = A + start * (prob_k / 8);
     const int4 *__restrict__ B_ptr =
         B + weight_indices * (prob_k / 16) * (prob_n / 4);
     const int4 *__restrict__ meta_ptr =
         meta + weight_indices * (prob_n / 16) * (prob_k / 8);
 
-    const int4 *__restrict__ s_ptr = s + weight_indices * prob_n / 8;
-    int4 *__restrict__ C_ptr = C + start * prob_n / 8;
-    int *locks_ptr = locks + batch_id * prob_n / 8;
+    const int4 *__restrict__ s_ptr = s + weight_indices * (prob_n / 8);
+    int4 *__restrict__ C_ptr = C + start * (prob_n / 8);
+    int *locks_ptr = locks + batch_id * (prob_n / 8);
     int thread_m = -1;
     int thread_k = -1;
 

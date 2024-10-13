@@ -10,7 +10,6 @@ from triteia.python.configs.models.llama import llama_shapes
 from triteia.python.ops.utils.generator import generate_model_distribution
 from triteia.python.ops import gen_batched_sparse_quant4_NT
 
-
 class TestSBMMOp(unittest.TestCase):
     def run_problem(
         self,
@@ -65,12 +64,13 @@ class TestSBMMOp(unittest.TestCase):
             torch.cuda.empty_cache()
 
     def test_tiny(self):
-        self.run_problem("uniform",  10,  5, 256,  256)
-        self.run_problem("zipf:1.5", 128, 2, 4096, 12288)
+        for i in range(10000):
+            self.run_problem("uniform",  10,  5, 256,  256)
+            self.run_problem("zipf:1.5", 128, 2, 4096, 12288)
 
     # def test_llama(self):
-    #     nrs = [16, 32, 64, 128, 256]
-    #     nms = [[2,4,8,16], [2,4,8,16,32], [2,4,8,16,32,64], [2,4,8,16,32,64,128], [2,4,8,16,32,64,128,256]]
+    #     nrs = [8, 16, 32, 64, 128, 256]
+    #     nms = [[1, 2,3, 4, 5,6,7, 8], [2,4,8,16], [2,4,8,16,32], [2,4,8,16,32,64], [2,4,8,16,32,64,128], [2,4,8,16,32,64,128,256]]
     #     distributions = ["uniform", "zipf:1.5"]
     #     for _, layers in llama_shapes.items():
     #         for layer in layers:
