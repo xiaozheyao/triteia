@@ -15,6 +15,7 @@ flops_func = lambda m, n, k: 2 * m * n * k
 
 
 def benchmark(m, n, k, dev="cuda", groupsize=-1):
+    repeats = 15
     int1_op, int1_weight = bb_gen_weight(n, m, k, "int1")
     int2_op, int2_weight = bb_gen_weight(n, m, k, "int2")
     int4_op, int4_weight = bb_gen_weight(n, m, k, "int4")
@@ -58,13 +59,13 @@ def benchmark(m, n, k, dev="cuda", groupsize=-1):
             "meta": meta,
             "scale": scale,
         },
-        repeats=3,
+        repeats=repeats,
     )
     fp16_result = timing_function(
         fp16_func,
         flops_func,
         kwargs={"m": m, "n": n, "k": k, "x": x, "weight_ref": weight_ref},
-        repeats=3,
+        repeats=repeats,
     )
     bitblas_int1_result = timing_function(
         bb_int1_func,
@@ -77,7 +78,7 @@ def benchmark(m, n, k, dev="cuda", groupsize=-1):
             "x": x,
             "qweight": int1_weight,
         },
-        repeats=3,
+        repeats=repeats,
     )
     bitblas_int2_result = timing_function(
         bb_int2_func,
@@ -90,7 +91,7 @@ def benchmark(m, n, k, dev="cuda", groupsize=-1):
             "x": x,
             "qweight": int2_weight,
         },
-        repeats=3,
+        repeats=repeats,
     )
     bitblas_int4_result = timing_function(
         bb_int4_func,
@@ -103,7 +104,7 @@ def benchmark(m, n, k, dev="cuda", groupsize=-1):
             "x": x,
             "qweight": int4_weight,
         },
-        repeats=3,
+        repeats=repeats,
     )
     results = [
         w4_2_4_result, 
@@ -118,12 +119,12 @@ def benchmark(m, n, k, dev="cuda", groupsize=-1):
 
 if __name__ == "__main__":
     results = []
-    batchsizes=[4, 16, 64, 128, 256, 512, 1024, 2048, 4096]
-    infeatures = 4096
-    outfeatures = 4096
+    batchsizes=[4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096,8192,16384]
+    infeatures = 5120
+    outfeatures = 5120
     for bsz in batchsizes:
         results.append(benchmark(infeatures, bsz, outfeatures))
         gc.collect()
         torch.cuda.empty_cache()
         torch.cuda.synchronize()
-    export_benchmark_results(results, ".local/matmul_bench_bb.json")
+    export_benchmark_results(results, ".local/matmul_bench_13b_3090.json")

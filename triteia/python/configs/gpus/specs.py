@@ -27,9 +27,15 @@ nvidia_gh200_120gb = {
     "fp16_tflops": 989.4,
     "fp32_tflops": 494.7,
 }
-
-nvidia_gpus = [nvidia_rtx_3090, nvidia_rtx_a6000, nvidia_gh200_120gb]
-
+nvidia_a100_40gb = {
+    "name": "NVIDIA A100-SXM4-40GB",
+    "compute_capability": "8.0",
+    "memory": 40,  # in GB
+    "bandwidth": 1555,  # in GB/s
+    "fp16_tflops": 312,
+    "fp32_tflops": 156,
+}
+nvidia_gpus = [nvidia_rtx_3090, nvidia_rtx_a6000, nvidia_gh200_120gb,nvidia_a100_40gb]
 
 def get_gpu_device_info():
     deviceCount = nvmlDeviceGetCount()
