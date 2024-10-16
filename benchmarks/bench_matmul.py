@@ -8,7 +8,6 @@ from triteia.python.utils import (
 
 flops_func = lambda m, n, k: 2 * m * n * k
 
-
 def benchmark(m, n, k, dev="cuda", groupsize=-1):
     x = torch.randn((n, k), dtype=torch.float16, device=dev)
     weight_ref, qweight, scale, meta = gen_sparse_quant4_NT(
@@ -20,7 +19,9 @@ def benchmark(m, n, k, dev="cuda", groupsize=-1):
 
     def w4_2_4_func(qweight, x, meta, scale):
         return matmul_4bit_2_4(qweight, x, meta, scale)
-
+    # warmup
+    w4_2_4_func(qweight, x, meta, scale)
+    fp16_func(x, weight_ref)
     w4_2_4_result = timing_function(
         w4_2_4_func,
         flops_func,

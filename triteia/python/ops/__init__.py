@@ -6,6 +6,7 @@ from .matmul.sbmm import (
     sbmm_4bit_2_4_multilaunch,
     sbmm_4bit_2_4_native,
 )
+from .matmul.bitblas import matmul_xbit_perf_only, bb_gen_weight
 from .utils.sparsity import mask_creator
 from .utils.generator import gen_sparse_quant4_NT, gen_batched_sparse_quant4_NT
 from .attention.sdpa import sdpa
@@ -22,4 +23,6 @@ __all__ = [
     "sbmm_4bit_2_4_multilaunch",
     "sbmm_4bit_2_4_native",
     "sdpa",
+    "matmul_xbit_perf_only",
+    "bb_gen_weight",
 ]

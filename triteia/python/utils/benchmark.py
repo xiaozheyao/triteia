@@ -1,3 +1,4 @@
+import gc
 import json
 import torch
 import inspect
@@ -37,7 +38,9 @@ def timing_function(func, flops_func, kwargs, repeats=1):
         # total_tflops = total_flops/1e12 # TFLOPS
         if gpu_info:
             mfu = 100 * perf_flops / 1e9 / gpu_info["fp16_tflops"]
-
+    gc.collect()
+    torch.cuda.empty_cache()
+    torch.cuda.synchronize()
     return {
         "output": output,
         "elapsed": elapsed,  # ms
@@ -67,7 +70,13 @@ def print_results_table(title, results):
         )
     console = Console()
     console.print(table)
-
+    
+def is_jsonable(x):
+    try:
+        json.dumps(x)
+        return True
+    except (TypeError, OverflowError):
+        return False
 
 def export_benchmark_results(results, filepath: str):
     gpu_specs = get_gpu_device_info()
@@ -76,7 +85,7 @@ def export_benchmark_results(results, filepath: str):
         for res in result:
             # ignore args if it is torch tensor
             config = {
-                k: v for k, v in res["args"].items() if not isinstance(v, torch.Tensor)
+                k: v for k, v in res["args"].items() if is_jsonable(v)
             }
             del res["args"]
             del res["output"]
