@@ -11,7 +11,7 @@ from triteia.python.utils import (
     print_results_table,
     export_benchmark_results,
 )
-flops_func = lambda m, n, k: 2 * m * n * k
+flops_func = lambda m, n, k: m * n * (2*k-1)
 
 
 def benchmark(m, n, k, dev="cuda", groupsize=-1):
