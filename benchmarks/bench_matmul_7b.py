@@ -11,11 +11,11 @@ from triteia.python.utils import (
     print_results_table,
     export_benchmark_results,
 )
-flops_func = lambda m, n, k: 2 * m * n * k
+flops_func = lambda m, n, k: m * n * (2*k-1)
 
 
 def benchmark(m, n, k, dev="cuda", groupsize=-1):
-    repeats = 15
+    repeats = 5
     int1_op, int1_weight = bb_gen_weight(n, m, k, "int1")
     int2_op, int2_weight = bb_gen_weight(n, m, k, "int2")
     int4_op, int4_weight = bb_gen_weight(n, m, k, "int4")
@@ -37,12 +37,7 @@ def benchmark(m, n, k, dev="cuda", groupsize=-1):
         return matmul_xbit_perf_only(op, qweight, x)
     def bb_int4_func(op, qweight, x):
         return matmul_xbit_perf_only(op, qweight, x)
-    
-    gc.collect()
-    torch.cuda.empty_cache()
-    torch.cuda.synchronize()
-    
-    w4_2_4_func(qweight, x, meta, scale)
+
     w4_2_4_result = timing_function(
         w4_2_4_func,
         flops_func,
@@ -57,14 +52,12 @@ def benchmark(m, n, k, dev="cuda", groupsize=-1):
         },
         repeats=repeats,
     )
-    fp16_func(x, weight_ref)
     fp16_result = timing_function(
         fp16_func,
         flops_func,
         kwargs={"m": m, "n": n, "k": k, "x": x, "weight_ref": weight_ref},
         repeats=repeats,
     )
-    bb_int1_func(int1_op, int1_weight, x)
     bitblas_int1_result = timing_function(
         bb_int1_func,
         flops_func,
@@ -78,7 +71,6 @@ def benchmark(m, n, k, dev="cuda", groupsize=-1):
         },
         repeats=repeats,
     )
-    bb_int2_func(int2_op, int2_weight, x)
     bitblas_int2_result = timing_function(
         bb_int2_func,
         flops_func,
@@ -92,7 +84,6 @@ def benchmark(m, n, k, dev="cuda", groupsize=-1):
         },
         repeats=repeats,
     )
-    bb_int4_func(int4_op, int4_weight, x)
     bitblas_int4_result = timing_function(
         bb_int4_func,
         flops_func,
@@ -119,7 +110,7 @@ def benchmark(m, n, k, dev="cuda", groupsize=-1):
 
 if __name__ == "__main__":
     results = []
-    batchsizes=[4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384]
+    batchsizes=[4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096]
     infeatures = 4096
     outfeatures = 4096
     for bsz in batchsizes:

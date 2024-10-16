@@ -19,7 +19,7 @@ def timing_function(func, flops_func, kwargs, repeats=1):
         }
     elapseds = []
 
-    for i in range(repeats):
+    for i in range(repeats+10):
         torch.cuda.synchronize()
         start = torch.cuda.Event(enable_timing=True)
         end = torch.cuda.Event(enable_timing=True)
@@ -29,8 +29,10 @@ def timing_function(func, flops_func, kwargs, repeats=1):
         torch.cuda.synchronize()
         elapsed = start.elapsed_time(end)
         elapseds.append(elapsed)
-
-    elapsed = sum(elapseds) / repeats
+        
+    elapseds = elapseds[2:][::2]
+    print(f"Elapsed times: {elapseds}")
+    elapsed = sum(elapseds) / len(elapseds)  # ms
 
     if flops_func:
         total_flops = flops_func(**flops_func_args)  # FLOPS
