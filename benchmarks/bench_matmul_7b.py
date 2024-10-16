@@ -38,15 +38,11 @@ def benchmark(m, n, k, dev="cuda", groupsize=-1):
     def bb_int4_func(op, qweight, x):
         return matmul_xbit_perf_only(op, qweight, x)
     
-    # warmup
-    w4_2_4_func(qweight, x, meta, scale)
-    bb_int1_func(int1_op, int1_weight, x)
-    bb_int2_func(int2_op, int2_weight, x)
-    bb_int4_func(int4_op, int4_weight, x)
-    fp16_func(x, weight_ref)
+    gc.collect()
     torch.cuda.empty_cache()
     torch.cuda.synchronize()
     
+    w4_2_4_func(qweight, x, meta, scale)
     w4_2_4_result = timing_function(
         w4_2_4_func,
         flops_func,
@@ -61,12 +57,14 @@ def benchmark(m, n, k, dev="cuda", groupsize=-1):
         },
         repeats=repeats,
     )
+    fp16_func(x, weight_ref)
     fp16_result = timing_function(
         fp16_func,
         flops_func,
         kwargs={"m": m, "n": n, "k": k, "x": x, "weight_ref": weight_ref},
         repeats=repeats,
     )
+    bb_int1_func(int1_op, int1_weight, x)
     bitblas_int1_result = timing_function(
         bb_int1_func,
         flops_func,
@@ -80,6 +78,7 @@ def benchmark(m, n, k, dev="cuda", groupsize=-1):
         },
         repeats=repeats,
     )
+    bb_int2_func(int2_op, int2_weight, x)
     bitblas_int2_result = timing_function(
         bb_int2_func,
         flops_func,
@@ -93,6 +92,7 @@ def benchmark(m, n, k, dev="cuda", groupsize=-1):
         },
         repeats=repeats,
     )
+    bb_int4_func(int4_op, int4_weight, x)
     bitblas_int4_result = timing_function(
         bb_int4_func,
         flops_func,
@@ -119,9 +119,9 @@ def benchmark(m, n, k, dev="cuda", groupsize=-1):
 
 if __name__ == "__main__":
     results = []
-    batchsizes=[4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096,8192,16384]
-    infeatures = 5120
-    outfeatures = 5120
+    batchsizes=[4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384]
+    infeatures = 4096
+    outfeatures = 4096
     for bsz in batchsizes:
         results.append(benchmark(infeatures, bsz, outfeatures))
         gc.collect()

@@ -25,8 +25,8 @@ def bb_gen_weight(m, n, k, w_dtype: str):
         matmul = bitblas.Matmul(config=matmul_config)
         weight_tensor = torch.randint(0, 7, (n, k), dtype=torch.int8).cuda()
         # Transform weight tensor to int4 data type
-        weight_tensor_int4 = matmul.transform_weight(weight_tensor)
-        return matmul, weight_tensor_int4
+        weight_tensor_int = matmul.transform_weight(weight_tensor)
+        return matmul, weight_tensor_int
     elif w_dtype == "int2":
         matmul_config = bitblas.MatmulConfig(
             M=m,
@@ -47,8 +47,8 @@ def bb_gen_weight(m, n, k, w_dtype: str):
         matmul = bitblas.Matmul(config=matmul_config)
         weight_tensor = torch.randint(0, 1, (n, k), dtype=torch.int8).cuda()
         # Transform weight tensor to int4 data type
-        weight_tensor_int4 = matmul.transform_weight(weight_tensor)
-        return matmul, weight_tensor_int4
+        weight_tensor_int = matmul.transform_weight(weight_tensor)
+        return matmul, weight_tensor_int
     elif w_dtype == "int1":
         matmul_config = bitblas.MatmulConfig(
             M=m,
@@ -69,8 +69,8 @@ def bb_gen_weight(m, n, k, w_dtype: str):
         matmul = bitblas.Matmul(config=matmul_config)
         weight_tensor = torch.randint(0, 1, (n, k), dtype=torch.int8).cuda()
         # Transform weight tensor to int4 data type
-        weight_tensor_int4 = matmul.transform_weight(weight_tensor)
-        return matmul, weight_tensor_int4
+        weight_tensor_int = matmul.transform_weight(weight_tensor)
+        return matmul, weight_tensor_int
     else:
         raise ValueError(f"Unsupported weight data type {w_dtype}")
     
