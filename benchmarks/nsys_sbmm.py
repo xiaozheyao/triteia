@@ -1,3 +1,160 @@
 import torch
+import pandas as pd
+import numpy as np
+from triteia.python.ops.matmul.sbmm_baselines import sbmm_fp16_bmm, sbmm_fp16_forloop
 
-from triteia.python.ops.matmul.sbmm_baselines import sbmm_fp16_bmm
+DEV="cuda:0"
+
+def benchmark(run_id, K, M, num_reqs, num_models, dist):
+    print(f"benchmark {num_models}x{M}x{K} with {num_reqs} requests")
+    result = []
+    fp16, qs, scales, metas = generate_2_4_pruned(
+        num_models,
+        M, K, groupsize=-1, device=DEV
+    )
+    base_weight = fp16[0]
+    x = torch.randn((num_reqs, K), dtype=torch.float16, device=DEV)
+
+    indices = generate_model_distribution(dist, num_reqs, num_models)
+    # move all -1 to the beginning
+    # indices = torch.cat((indices[indices==-1], indices[indices!=-1]))
+    indices = torch.sort(indices)[0]
+    # group indices together, so same indices are consecutive
+    # indices = torch.tensor([-1,-1, 3, 1]).to(DEV)
+    
+    # baseline1: fp16: 
+    # warmup here
+    fp16_output = torch.zeros((num_reqs, M), dtype=torch.float16, device=DEV)
+    ibmm_fp16(indices, None, fp16_output, x, fp16, None)
+    # actual measure
+    start = torch.cuda.Event(enable_timing=True)
+    end = torch.cuda.Event(enable_timing=True)
+    fp16_output = torch.zeros((num_reqs, M), dtype=torch.float16, device=DEV)
+    torch.cuda.nvtx.range_push(f"{run_id} ibmm_fp16_for {num_models}x{M}x{K}")
+    start.record()
+    fp16_output = ibmm_fp16(indices, None, fp16_output, x, fp16, None)
+    end.record()
+    torch.cuda.synchronize()
+    torch.cuda.nvtx.range_pop()
+    fp16_time = start.elapsed_time(end)
+
+    # baseline2: fp16 bmm: 
+    # warmup here
+    fp16_bmm_output = torch.zeros((num_reqs, M), dtype=torch.float16, device=DEV)
+    fp16_t = fp16.transpose(1,2).contiguous()
+    ibmm_fp16_bmm(indices, None, fp16_bmm_output, x, fp16_t)
+    # actual measure
+    # https://discuss.pytorch.org/t/how-to-measure-time-in-pytorch/26964
+    start = torch.cuda.Event(enable_timing=True)
+    end = torch.cuda.Event(enable_timing=True)
+    fp16_bmm_output = torch.zeros((num_reqs, M), dtype=torch.float16, device=DEV)
+    torch.cuda.nvtx.range_push(f"{run_id} ibmm_fp16_bmm {num_models}x{M}x{K}")
+    start.record()
+    fp16_bmm_output = ibmm_fp16_bmm(indices, None, fp16_bmm_output, x, fp16_t)
+    end.record()
+    torch.cuda.synchronize()
+    torch.cuda.nvtx.range_pop()
+    fp16_bmm_time = start.elapsed_time(end)
+    
+    # baseline3: for loop
+    # warmup here
+    ibmm_sparse_marlin(
+        4, indices, metas, None, x, qs, scales, base_weight=base_weight
+    )
+    # actual measure
+    torch.cuda.nvtx.range_push(f"{run_id} for-loop {num_models}x{M}x{K}")
+    start = torch.cuda.Event(enable_timing=True)
+    end = torch.cuda.Event(enable_timing=True)
+    start.record()
+    ref_output = ibmm_sparse_marlin(
+        4, indices, metas, None, x, qs, scales, base_weight=base_weight
+    )
+    end.record()
+    torch.cuda.synchronize()
+    torch.cuda.nvtx.range_pop()
+    for_loop_time = start.elapsed_time(end)
+    
+    # sparse Marlin
+    # warmup here
+    ibmm_sparse_marlin_stream(
+        4,indices, metas, None, x, qs, scales, base_weight=base_weight, parallel=False
+    )
+    # actual measure
+    start = torch.cuda.Event(enable_timing=True)
+    end = torch.cuda.Event(enable_timing=True)
+    torch.cuda.nvtx.range_push("ibmm_sparse_marlin_stream parallel=False")
+    start.record()
+    output = ibmm_sparse_marlin_stream(
+        4,indices, metas, None, x, qs, scales, base_weight=base_weight, parallel=False
+    )
+    end.record()
+    torch.cuda.synchronize()
+    torch.cuda.nvtx.range_pop()
+    stream_time = start.elapsed_time(end)
+    # sparse_marlin parallel
+    # warmup here
+    parallel_stream_output = torch.zeros((num_reqs, M), dtype=torch.float16, device=DEV)
+    parallel_stream_output = ibmm_native(
+        4, indices, metas, parallel_stream_output, x, qs, scales
+    )
+    # actual measure
+    start = torch.cuda.Event(enable_timing=True)
+    end = torch.cuda.Event(enable_timing=True)
+    parallel_stream_output = torch.zeros((num_reqs, M), dtype=torch.float16, device=DEV)
+    torch.cuda.nvtx.range_push(f"{run_id} ibmm_native {num_models}x{M}x{K}")
+    start.record()
+    parallel_stream_output = ibmm_native(
+        4, indices, metas, parallel_stream_output, x, qs, scales, base_weight=base_weight
+    )
+    end.record()
+    torch.cuda.synchronize()
+    torch.cuda.nvtx.range_pop()
+    parallel_stream_time = start.elapsed_time(end)
+    result.append({
+        "M": M,
+        "K": K,
+        "num_reqs": num_reqs,
+        "num_models": num_models,
+        "dist": dist,
+        "func_for_loop": for_loop_time,
+        "func_improved_v1": stream_time,
+        "func_fp16": fp16_time,
+        "func_fp16_bmm": fp16_bmm_time,
+        "func_improved_v2": parallel_stream_time,
+    })
+    # verify resutlts...
+    if not torch.allclose(ref_output, parallel_stream_output):
+        print("error: ref_output != parallel_stream_output")
+        print(f"ref_output: {ref_output}")
+        print(parallel_stream_output)
+    if not torch.allclose(ref_output, output):
+        print("error: ref_output != output")
+        print(ref_output)
+        print(output)
+    if not torch.allclose(fp16_bmm_output, fp16_output, atol=1e-1, rtol=1e-3):
+        print("error: fp16_bmm_output != fp16_output")
+        print(fp16_bmm_output)
+        print(fp16_output)
+    return result
+    
+if __name__ == "__main__":
+    
+    torch.manual_seed(0)
+    np.random.seed(0)
+    Ks = [2048, 4096]
+    Ms = [2048, 4096]
+    num_requests = [100]
+    num_models = [16, 64]
+    distribution = ['uniform']
+    trials = 5
+    results = []
+    for i in range(trials):
+        for M, K in zip(Ms, Ks):
+            for num_req in num_requests:
+                for num_model in num_models:
+                    for dist in distribution:
+                        res = benchmark(i, K, M, num_req, num_model, dist)
+                        results.extend(res)
+    results = pd.DataFrame(results)
+    print(results)
+    results.to_csv(".local/benchmark_marlin.csv", index=False)
