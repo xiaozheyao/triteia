@@ -9,17 +9,17 @@ from triteia.python.utils import (
 flops_func = lambda m, n, k: m * n * (2*k-1)
 
 def benchmark(m, n, k, dev="cuda", groupsize=-1):
-    repeats = 10
+    repeats = 1
     x = torch.randn((n, k), dtype=torch.float16, device=dev)
     weight_ref, qweight, scale, meta = gen_sparse_quant4_NT(
         m, k, groupsize=groupsize, device=dev
     )
+    print(x.shape, weight_ref.shape)
     def fp16_func(x, weight_ref):
         return torch.matmul(x, weight_ref)
 
     def w4_2_4_func(qweight, x, meta, scale):
         return matmul_4bit_2_4(qweight, x, meta, scale)
-    # warmup    
     w4_2_4_result = timing_function(
         w4_2_4_func,
         flops_func,
@@ -47,5 +47,5 @@ def benchmark(m, n, k, dev="cuda", groupsize=-1):
 
 if __name__ == "__main__":
     results = []
-    results.append(benchmark(4096, 1, 4096))
+    results.append(benchmark(4096, 24, 4096))
     # export_benchmark_results(results, ".local/matmul_bench.json")

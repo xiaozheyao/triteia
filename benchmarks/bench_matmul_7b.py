@@ -110,7 +110,7 @@ def benchmark(m, n, k, dev="cuda", groupsize=-1):
 
 if __name__ == "__main__":
     results = []
-    batchsizes=[4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096]
+    batchsizes=[1,2,3,4]
     infeatures = 4096
     outfeatures = 4096
     for bsz in batchsizes:
@@ -118,4 +118,4 @@ if __name__ == "__main__":
         gc.collect()
         torch.cuda.empty_cache()
         torch.cuda.synchronize()
-    export_benchmark_results(results, ".local/matmul_bench_13b_3090.json")
+    export_benchmark_results(results, ".local/matmul_bench_7b_3090_small.json")
